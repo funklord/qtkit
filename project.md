@@ -87,20 +87,58 @@ and then read the hint; whether they stick on a desktop whose platform
 theme honours the request (GTK's, Plasma's) is theirs to measure, and it
 is recorded here, not reported as a fault.
 
+## The flow layout {#flow-layout}
+
+Status: settled 2026-11-20
+Decides: flow-layout
+
+`include/qtkit/flow_layout.h`. A row of widgets that wraps to more rows
+when it will not fit, so a narrow window reflows buttons instead of
+cutting their labels. Both copies, hydra's and fuzzypickles', were read in
+full with hydra's test; qtkit's is written fresh, not taken from either.
+
+| Part | Taken from | Why, and what the other did |
+|---|---|---|
+| sizeHint is the unwrapped row | hydra | a dialog with room opens as one row; fuzzypickles' hint was the widest item, so a dialog sized to it opened a line per button |
+| Spacing: the style's push-button gap, then the layout's own | hydra | Fusion answers -1 to `layoutSpacing` and 6 through `spacing()`, measured on Qt 6.8; fuzzypickles asked `pixelMetric`, which gives 6 there too, so neither was wrong on these styles |
+| One walk for heightForWidth and setGeometry | both | the height reported and the places given cannot disagree |
+| Same places as a QHBoxLayout at the natural width | hydra's test | moving a row onto it changes nothing on a wide window; checked against a real QHBoxLayout |
+| Hidden widgets take no room | new | neither skipped `isEmpty()` items, so hiding a button left its gap; every Qt layout skips them |
+| A lone over-wide item given the line, not below its minimum | new | both placed its full hint past the right edge, the "pen Folde" shape one level down |
+| Right to left mirrored | new | QBoxLayout mirrors; neither copy did |
+
+The three new parts were each removed in turn and the suite failed on
+every one.
+
 ## Next
 
 Status: open
 Decides: qtkit-next
 
-Each when a second tree needs it, from the survey of 2026-11-20:
+From the survey of 2026-11-20, what is left and why:
 
-- **An About window with the copyright line** -- hydra, beerssh and
-  fuzzypickles each wrote one; `project-attribution` says what it holds.
-- **The desktop's fixed font** for bytes and offsets.
-- **`flow_layout`**, written separately by hydra and fuzzypickles.
+- **The About window is not a piece.** hydra, fuzzypickles and situ each
+  make one `QMessageBox::about` call with their own text; the one shared
+  lesson, escaping the address in rich text, is a paragraph in
+  `project-attribution`, not code. beerssh's licences page is its own.
+- **The desktop's fixed font** is one call,
+  `QFontDatabase::systemFont(QFontDatabase::FixedFont)`, named in
+  `harmonization.md`; a wrapper would add nothing.
 
 Moving a program onto qtkit is that program's own work, done when its
 session next touches the code it replaces; qtkit does not edit them.
+hydra's `flow_layout` and fuzzypickles' `fzp_flow_layout` are the
+candidates now, with the theme copies.
+
+## Open
+
+Status: open
+Decides: qtkit-remote
+
+**qtkit has no remote yet.** A consumer vendors it as a submodule, which
+needs one. Creating `funklord/qtkit` publishes it, so whether, and
+public or private, is the holder's (asked 2026-11-20). Until then the
+commits are on this machine only.
 
 ## Working on this
 

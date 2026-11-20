@@ -19,7 +19,9 @@ contains(QT, dbus) {
 }
 
 SOURCES += \
+	$$QTKIT_ROOT/src/flow_layout.cpp \
 	$$QTKIT_ROOT/src/theme.cpp
 
 HEADERS += \
+	$$QTKIT_ROOT/include/qtkit/flow_layout.h \
 	$$QTKIT_ROOT/include/qtkit/theme.h

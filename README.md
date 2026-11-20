@@ -20,6 +20,12 @@ and headers with, and follows the desktop when it changes. It never asks
 the session bus when none is named, because doing so starts a bus daemon
 that nothing stops.
 
+**Its flow layout** puts a row of buttons on as many lines as the window
+needs. A plain horizontal row can only squeeze its buttons until their
+labels are cut, and keeps any dialog holding it at least as wide as all of
+them together; this one wraps, gives the window the height the wrap needs,
+and on a wide window lays out exactly as the plain row would.
+
 How it differs from what programs do without it:
 
 - **Qt alone** follows the desktop only where a platform theme connects

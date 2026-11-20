@@ -5,14 +5,17 @@
 // the files it writes -- in a directory of its own, so the machine's real
 // desktop never answers.
 
+#include "qtkit/flow_layout.h"
 #include "qtkit/theme.h"
 
 #include <QApplication>
 #include <QDir>
 #include <QFile>
+#include <QHBoxLayout>
 #include <QStyle>
 #include <QStyleHints>
 #include <QTemporaryDir>
+#include <QWidget>
 
 #include <cstdio>
 
@@ -163,6 +166,85 @@ void test_theme_follows(QApplication &application)
 	(void)light_palette;
 }
 
+// A fixed-size widget, so a size is a number the test chose.
+QWidget *box(QWidget *host, int width, int height)
+{
+	QWidget *widget = new QWidget(host);
+	widget->setFixedSize(width, height);
+	return widget;
+}
+
+void test_flow_layout()
+{
+	QWidget host;
+	auto *flow = new qtkit_flow_layout(&host, 0, 10, 10);
+	QWidget *a = box(&host, 80, 20), *b = box(&host, 80, 20), *c = box(&host, 120, 30);
+	flow->addWidget(a);
+	flow->addWidget(b);
+	flow->addWidget(c);
+	check(flow->minimumSize().width() == 120, "the minimum is the widest item, not the row");
+	check(flow->sizeHint() == QSize(300, 30), "the hint is the unwrapped row");
+	check(flow->heightForWidth(300) == 30, "one line at the hint");
+	check(flow->heightForWidth(299) == 60, "a pixel less wraps the last item");
+	check(flow->heightForWidth(120) == 90, "the minimum: a line each");
+
+	flow->setGeometry(QRect(0, 0, 200, 60));
+	check(a->geometry() == QRect(0, 0, 80, 20) && b->geometry() == QRect(90, 0, 80, 20) &&
+	          c->geometry() == QRect(0, 30, 120, 30),
+	      "placed left to right, wrapped below the tallest of the line");
+
+	b->hide();
+	check(flow->sizeHint() == QSize(210, 30), "a hidden widget takes no room");
+	flow->setGeometry(QRect(0, 0, 210, 30));
+	check(c->geometry() == QRect(90, 0, 120, 30), "nor leaves a gap");
+	b->show();
+
+	// A plain widget's hint is its fixed size; one that may shrink needs a
+	// hint of its own to be too wide.
+	struct shrinkable : QWidget {
+		using QWidget::QWidget;
+		QSize sizeHint() const override { return QSize(120, 30); }
+	};
+	auto *wide = new shrinkable(&host);
+	wide->setMinimumWidth(60);
+	flow->addWidget(wide);
+	flow->setGeometry(QRect(0, 0, 100, 400));
+	check(wide->geometry().width() == 100, "a lone item too wide is given the line");
+	flow->setGeometry(QRect(0, 0, 40, 400));
+	check(wide->geometry().width() == 60, "but not below its own minimum");
+	delete wide;
+
+	host.setLayoutDirection(Qt::RightToLeft);
+	flow->setGeometry(QRect(0, 0, 200, 60));
+	check(a->geometry() == QRect(120, 0, 80, 20), "right to left mirrors");
+}
+
+// At the unwrapped width it lays out as a QHBoxLayout does, with the gap the
+// style gives -- so a row moved onto it changes nothing on a wide window.
+void test_flow_matches_a_row()
+{
+	QWidget flow_host, row_host;
+	auto *flow = new qtkit_flow_layout(&flow_host, 0);
+	auto *row = new QHBoxLayout(&row_host);
+	row->setContentsMargins(0, 0, 0, 0);
+	QList<QWidget *> in_flow, in_row;
+	for (int width : {70, 50, 90}) {
+		in_flow << box(&flow_host, width, 24);
+		in_row << box(&row_host, width, 24);
+		flow->addWidget(in_flow.last());
+		row->addWidget(in_row.last());
+	}
+	check(flow->horizontal_spacing() >= 0, "the style's gap is a real number");
+	check(flow->sizeHint() == row->sizeHint(), "the same hint as a row");
+	const QRect natural(QPoint(0, 0), row->sizeHint());
+	flow->setGeometry(natural);
+	row->setGeometry(natural);
+	bool same = true;
+	for (int i = 0; i < in_flow.size(); ++i)
+		same = same && in_flow[i]->geometry() == in_row[i]->geometry();
+	check(same, "the same places as a row at the natural width");
+}
+
 void test_choice_names()
 {
 	check(qtkit_choice_from_name(" Dark ") == qtkit_choice::dark, "a choice read leniently");
@@ -184,6 +266,8 @@ int main(int argc, char **argv)
 	test_order();
 	test_theme_follows(application);
 	test_choice_names();
+	test_flow_layout();
+	test_flow_matches_a_row();
 	std::printf("%d check(s), %d failure(s)\n", checks, failures);
 	return failures == 0 && checks > 0 ? 0 : 1;
 }
