@@ -1,0 +1,14 @@
+# fmake's view of this tree -- see README.md for the plain `fmake` line.
+#
+# include-dirs: the public headers are included as "qtkit/x.h", from
+# include/, which fmake does not guess.
+# test-env: the tests run without a display and with no session bus named,
+# as `make test` runs them.
+
+[project]
+include-dirs = ["include"]
+test-env = ["QT_QPA_PLATFORM=offscreen", "DBUS_SESSION_BUS_ADDRESS="]
+exclude = ["build", "build-test"]
+
+[target.test]
+name = "qtkit-tests"

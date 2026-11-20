@@ -1,0 +1,9 @@
+/build/
+/build-test/
+/.qmake.stash
+__pycache__/
+.claude/
+.fmake/
+.fmake/
+/libqtkit.a
+/qtkit-tests
