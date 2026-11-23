@@ -26,10 +26,12 @@ takes the update, instead of in the one tree whose session noticed.
 
 ### How it is consumed
 
-As a git submodule, `vendor/qtkit`, and one line in the program's `.pro`:
+As a git submodule at the root of the consuming tree, `qtkit/` -- where
+the workspace keeps vendored siblings (`harmonization.md`) -- and one
+line in the program's `.pro`:
 
     QT += dbus                      # optional, and BEFORE the include
-    include(vendor/qtkit/qtkit.pri)
+    include(qtkit/qtkit.pri)
 
 The sources compile into the program with its own flags, as softkeys
 does, so its `--gc-sections` drops whatever it does not call. Without
@@ -130,19 +132,14 @@ session next touches the code it replaces; qtkit does not edit them.
 hydra's `flow_layout` and fuzzypickles' `fzp_flow_layout` are the
 candidates now, with the theme copies.
 
-## Open
+## Who uses it
 
 Status: open
-Decides: qtkit-remote
+Decides: qtkit-adoption
 
-**qtkit has no remote yet.** A consumer vendors it as a submodule, which
-needs one. Creating `funklord/qtkit` publishes it, so whether, and
-public or private, is the holder's (asked 2026-11-20). Until then the
-commits are on this machine only.
-
-## Working on this
-
-`make` builds `libqtkit.a` so the tree compiles alone; `make test` runs
-the suite offscreen with no session bus named; `make style` is the gate.
-The suite was proved able to fail by reverting the session-first order,
-which it caught.
+On 2026-11-23: snurra (submodule, at `vendor/qtkit`) and netcfgd (a
+pinned copy at `gui/vendor/qtkit`, made while qtkit had no remote) take
+the theme. hydra, beerssh, fuzzypickles and situ still carry their own
+theme, and hydra and fuzzypickles their own flow layout; each was told
+by its inbox the same day, with the move to `qtkit/` at the root for
+the two under `vendor/`. qtkit's remote is `funklord/qtkit`.

@@ -43,7 +43,7 @@ How it differs from what programs do without it:
 As a submodule, and one line in the program's `.pro`:
 
     QT += dbus                      # optional: the portal, and its signal
-    include(vendor/qtkit/qtkit.pri)
+    include(qtkit/qtkit.pri)
 
 then, after the `QApplication` exists:
 
